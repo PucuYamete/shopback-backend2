@@ -185,6 +185,7 @@ app.get("/products", (req, res) => {
             category: item.category || "HOT",
             productUrl: item.productUrl,
             image: item.image || "",
+            description: item.description || "",
             active: item.active !== false,
         }));
 
@@ -318,7 +319,12 @@ app.get("/go", (req, res) => {
     const logFile = path.join(logDir, "clicks.log");
 
     fs.mkdirSync(logDir, { recursive: true });
-    logClick(logData)
+
+    console.log("CLICK PRODUCT:", product.title);
+
+    logClick(logData).catch((error) => {
+        console.error("Log click error:", error.message);
+    });
 
     return res.redirect(302, affiliateUrl);
 });
