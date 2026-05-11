@@ -182,6 +182,7 @@ app.get("/products", (req, res) => {
             id: item.id,
             title: item.title,
             platform: item.platform,
+            category: item.category || "HOT",
             productUrl: item.productUrl,
             image: item.image || "",
             active: item.active !== false,
