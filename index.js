@@ -165,95 +165,25 @@ setInterval(() => {
 
 // ================== TEST ROUTE ==================
 
-app.get("/go", async (req, res) => {
-    const id = req.query.id;
-    const encodedUrl = req.query.u;
+app.get("/products", (req, res) => {
+    const products = readProducts();
 
-    const ip = getClientIp(req);
+    const publicProducts = products
+        .filter((item) => item.active !== false)
+        .map((item) => ({
+            id: item.id,
+            title: item.title,
+            platform: item.platform,
+            category: item.category || "HOT",
+            productUrl: item.productUrl,
+            image: item.image || "",
+            description: item.description || "",
+            active: item.active !== false,
+        }));
 
-    if (!checkRateLimit(ip)) {
-        return res.status(429).send("Too many requests, slow down");
-    }
-
-    // CASE 1: Người dùng bấm sản phẩm có sẵn trên web
-    if (id) {
-        const product = findProductById(id);
-
-        if (!product) {
-            return res.status(404).send("Product not found");
-        }
-
-        if (!product.affiliateUrl) {
-            return res.status(400).send("Missing affiliate URL");
-        }
-
-        const logData = {
-            time: new Date().toISOString(),
-            type: "hot_product",
-            productId: product.id,
-            title: product.title,
-            productUrl: product.productUrl,
-            affiliateUrl: product.affiliateUrl,
-            platform: "shopee",
-            ip,
-            userAgent: req.headers["user-agent"],
-        };
-
-        console.log("CLICK HOT PRODUCT:", product.title);
-
-        logClick(logData).catch((error) => {
-            console.error("Log click error:", error.message);
-        });
-
-        return res.redirect(302, product.affiliateUrl);
-    }
-
-    // CASE 2: Người dùng tự dán link Shopee
-    if (encodedUrl) {
-        let productUrl;
-
-        try {
-            productUrl = decodeURIComponent(encodedUrl);
-        } catch {
-            return res.status(400).send("Invalid encoded URL");
-        }
-
-        if (!validateProductUrl(productUrl)) {
-            return res.status(400).send("Invalid or unsupported URL");
-        }
-
-        const platform = detectPlatform(productUrl);
-
-        if (platform !== "shopee") {
-            return res.status(400).send("Only Shopee links are supported");
-        }
-
-        const clickId = crypto.randomBytes(8).toString("hex");
-        const affiliateUrl = buildAffiliateLink(productUrl, platform, clickId);
-
-        const logData = {
-            time: new Date().toISOString(),
-            type: "user_submitted_link",
-            productId: "custom-link",
-            title: "User submitted Shopee link",
-            productUrl,
-            affiliateUrl,
-            platform,
-            ip,
-            userAgent: req.headers["user-agent"],
-        };
-
-        console.log("CLICK USER LINK:", productUrl);
-
-        logClick(logData).catch((error) => {
-            console.error("Log click error:", error.message);
-        });
-
-        return res.redirect(302, affiliateUrl);
-    }
-
-    return res.status(400).send("Missing product id or URL");
+    res.json(publicProducts);
 });
+
 
 // ================== PREVIEW PRODUCT ==================
 
@@ -329,8 +259,6 @@ app.get("/preview", async (req, res) => {
         });
     }
 });
-
-// ================== REDIRECT + LOG ==================
 
 // ================== REDIRECT + LOG ==================
 
