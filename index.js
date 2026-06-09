@@ -175,6 +175,8 @@ app.get("/products", (req, res) => {
             title: item.title,
             platform: item.platform,
             category: item.category || "HOT",
+            priceLabel: item.priceLabel || "",
+            badge: item.badge || "",
             productUrl: item.productUrl,
             image: item.image || "",
             description: item.description || "",
